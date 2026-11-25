@@ -372,7 +372,7 @@ function render() {
 }
 
 document.getElementById("form")
-.addEventListener("submit", e => {
+.addEventListener("submit", async e => {
     e.preventDefault();
 
     const text = input.value.trim();
@@ -380,7 +380,6 @@ document.getElementById("form")
 
     if (!currentId) {
         currentId = Date.now();
-
         conversations.unshift({
             id: currentId,
             title: text.slice(0, 30),
@@ -399,16 +398,44 @@ document.getElementById("form")
         text: text
     });
 
-    current.messages.push({
-        role: "ai",
-        text: "NEURA-nın AI mühərriki hələ qoşulmayıb. Hazırda söhbət tarixçəsi yadda saxlanılır."
-    });
-
     input.value = "";
+    input.disabled = true;
 
     save();
     render();
+
+    try {
+        const response = await fetch(
+            "https://neura-ai-mdy3.onrender.com/api/chat",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ message: text })
+            }
+        );
+
+        const data = await response.json();
+
+        current.messages.push({
+            role: "ai",
+            text: data.reply || data.error || "Xəta baş verdi."
+        });
+
+    } catch (error) {
+        current.messages.push({
+            role: "ai",
+            text: "Serverlə əlaqə qurmaq mümkün olmadı."
+        });
+    }
+
+    input.disabled = false;
+    save();
+    render();
+    input.focus();
 });
+     
 
 function toggleMenu() {
     document.getElementById("sidebar")
