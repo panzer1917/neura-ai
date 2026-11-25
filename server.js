@@ -43,41 +43,44 @@ app.post("/api/chat", async (req, res) => {
       apiKey: process.env.GEMINI_API_KEY
     });
 
-    let response;
-let attempts = 0;
+    let interaction;
+    let attempts = 0;
 
-while (attempts < 3) {
-try {
-response = await ai.models.generateContent({
-model: "gemini-3.8-flash",
-contents: message,
-config: {
-systemInstruction:
-"Sən NEURA adlı süni intellektsən. İstifadəçi ilə Azərbaycan dilində səmimi, ağıllı və aydın danış. Sualı diqqətlə cavablandır."
-}
-});
+    while (attempts < 3) {
+      try {
+        interaction = await ai.interactions.create({
+          model: "gemini-4-hydrogen",
+          input: message,
+          system_instruction:
+            "Sən NEURA adlı süni intellektsən. Azərbaycan dilində səmimi, ağıllı və aydın danış. İstifadəçinin suallarını diqqətlə cavablandır.",
+          generation_config: {
+            max_output_tokens: 4096,
+            thinking_level: "high"
+          }
+        });
 
-break;
+        break;
 
-} catch (error) {
-attempts++;
+      } catch (error) {
+        attempts++;
 
-if (attempts >= 3 || error.status !== 503) {
-  throw error;
-}
+        if (attempts >= 3 || error.status !== 503) {
+          throw error;
+        }
 
-await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
+        await new Promise(resolve =>
+          setTimeout(resolve, 2000 * attempts)
+        );
+      }
+    }
 
-}
-}
+    if (!interaction || !interaction.output_text) {
+      throw new Error("Gemini cavab qaytarmadı.");
+    }
 
-    if (!response) {
-  throw new Error("Gemini cavab qaytarmadı.");
-}
-
-res.json({
-  reply: response.text
-});
+    res.json({
+      reply: interaction.output_text
+    });
 
   } catch (error) {
     console.error("NEURA AI Error:", error);
