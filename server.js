@@ -21,18 +21,48 @@ app.get("/", (req, res) => {
   res.send("NEURA AI Server is running!");
 });
 
-app.post("/api/chat", (req, res) => {
-  const message = req.body.message;
+app.post("/api/chat", async (req, res) => {
+  try {
+    const message = req.body.message;
 
-  if (!message) {
-    return res.status(400).json({
-      error: "Message is required"
+    if (!message) {
+      return res.status(400).json({
+        error: "Message is required"
+      });
+    }
+
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({
+        error: "API key is missing"
+      });
+    }
+
+    const { GoogleGenAI } = await import("@google/genai");
+
+    const ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY
+    });
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: message,
+      config: {
+        systemInstruction:
+          "Sən NEURA adlı süni intellektsən. İstifadəçi ilə Azərbaycan dilində səmimi, ağıllı və aydın danış. Sualı diqqətlə cavablandır."
+      }
+    });
+
+    res.json({
+      reply: response.text
+    });
+
+  } catch (error) {
+    console.error("NEURA AI Error:", error);
+
+    res.status(500).json({
+      error: "NEURA hazırda cavab verə bilmir."
     });
   }
-
-  res.json({
-    reply: "NEURA mesajını qəbul etdi: " + message
-  });
 });
 
 app.listen(PORT, () => {
