@@ -49,15 +49,14 @@ app.post("/api/chat", async (req, res) => {
     while (attempts < 3) {
       try {
         interaction = await ai.interactions.create({
-          model: "gemini-4-hydrogen",
-          input: message,
-          system_instruction:
-            "Sən NEURA adlı süni intellektsən. Azərbaycan dilində səmimi, ağıllı və aydın danış. İstifadəçinin suallarını diqqətlə cavablandır.",
-          generation_config: {
-            max_output_tokens: 4096,
-            thinking_level: "high"
-          }
-        });
+  model: "gemini-3.5-flash-lite",
+  input: message,
+  system_instruction:
+    "Sən NEURA adlı süni intellektsən. Azərbaycan dilində səmimi, ağıllı və aydın danış. İstifadəçinin suallarını diqqətlə cavablandır.",
+  generation_config: {
+    max_output_tokens: 4096
+  }
+});
 
         break;
 
