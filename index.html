@@ -286,7 +286,7 @@ footer {
     <button class="send" type="submit">↑</button>
 </form>
 
-<footer>NEURA AI · Version 1.1</footer>
+<footer>NEURA AI · Version 1.2</footer>
 
 </section>
 
@@ -456,11 +456,18 @@ document.getElementById("form")
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ message: text })
+                body: JSON.stringify({
+                    message: text,
+                    previousInteractionId: current.interactionId || null
+                })
             }
         );
 
         const data = await response.json();
+
+        if (data.interactionId) {
+            current.interactionId = data.interactionId;
+        }
 
         current.messages.push({
             role: "ai",
