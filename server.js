@@ -43,18 +43,41 @@ app.post("/api/chat", async (req, res) => {
       apiKey: process.env.GEMINI_API_KEY
     });
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
-      contents: message,
-      config: {
-        systemInstruction:
-          "Sən NEURA adlı süni intellektsən. İstifadəçi ilə Azərbaycan dilində səmimi, ağıllı və aydın danış. Sualı diqqətlə cavablandır."
-      }
-    });
+    let response;
+let attempts = 0;
 
-    res.json({
-      reply: response.text
-    });
+while (attempts < 3) {
+try {
+response = await ai.models.generateContent({
+model: "gemini-3.8-flash",
+contents: message,
+config: {
+systemInstruction:
+"Sən NEURA adlı süni intellektsən. İstifadəçi ilə Azərbaycan dilində səmimi, ağıllı və aydın danış. Sualı diqqətlə cavablandır."
+}
+});
+
+break;
+
+} catch (error) {
+attempts++;
+
+if (attempts >= 3 || error.status !== 503) {
+  throw error;
+}
+
+await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
+
+}
+}
+
+    if (!response) {
+  throw new Error("Gemini cavab qaytarmadı.");
+}
+
+res.json({
+  reply: response.text
+});
 
   } catch (error) {
     console.error("NEURA AI Error:", error);
