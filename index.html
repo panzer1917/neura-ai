@@ -624,6 +624,7 @@ svg {
 <script>
 const API_URL = "https://neura-ai-mdy3.onrender.com/api/chat";
 const STORAGE = "neura_conversations";
+const THEME_KEY = "neura_theme";
 
 const ICON_COPY = '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>';
 const ICON_X = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -643,10 +644,10 @@ try {
 } catch (e) {
     conversations = [];
 }
-conversations = conversations.filter(c => c.messages && c.messages.length > 0);
+conversations = conversations.filter(c => c && Array.isArray(c.messages) && c.messages.length > 0);
 
 let currentId = null;
-let pending = false;
+let pendingChatId = null;
 let slow = false;
 
 const $ = id => document.getElementById(id);
@@ -657,8 +658,12 @@ const input = $("input");
 const sendBtn = $("sendBtn");
 const sidebar = $("sidebar");
 const scrim = $("scrim");
+const themeBtn = $("themeBtn");
+const themeIcon = $("themeIcon");
+const menuBtn = $("menuBtn");
+const newChatBtn = $("newChat");
+const form = $("form");
 
-const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const isTouch = window.matchMedia("(pointer: coarse)").matches;
 
 if (window.marked) {
@@ -682,6 +687,11 @@ function save() {
 
 function getCurrent() {
     return conversations.find(c => c.id === currentId);
+}
+
+function makeTitle(text) {
+    const clean = text.replace(/\s+/g, " ").trim();
+    return clean.length > 36 ? clean.slice(0, 36).trimEnd() + "…" : clean || "Yeni söhbət";
 }
 
 function setProse(el, text) {
@@ -750,6 +760,34 @@ function enhanceCode(prose) {
 
 function scrollBottom() {
     scroller.scrollTop = scroller.scrollHeight;
+}
+
+function autosize() {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 160) + "px";
+}
+
+function updateSend() {
+    sendBtn.disabled = input.value.trim().length === 0;
+}
+
+function openMenu() {
+    sidebar.classList.add("open");
+    scrim.classList.add("show");
+}
+
+function closeMenu() {
+    sidebar.classList.remove("open");
+    scrim.classList.remove("show");
+}
+
+function syncTheme() {
+    const t = document.documentElement.getAttribute("data-theme") || "dark";
+    themeIcon.innerHTML = t === "dark" ? ICON_SUN : ICON_MOON;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+        meta.setAttribute("content", t === "dark" ? "#1b1b1d" : "#fafafa");
+    }
 }
 
 /* ---------- History ---------- */
@@ -865,48 +903,4 @@ function renderMessage(m) {
             flash(copy, "Kopyalandı");
         };
 
-        actions.appendChild(copy);
-        body.appendChild(actions);
-    }
-
-    wrap.appendChild(body);
-    return wrap;
-}
-
-function renderThinking() {
-    const wrap = document.createElement("div");
-    wrap.className = "msg ai";
-
-    const body = document.createElement("div");
-    body.className = "body";
-
-    const row = document.createElement("div");
-    row.className = "thinking";
-
-    const dots = document.createElement("span");
-    dots.className = "dots";
-    dots.innerHTML = "<i></i><i></i><i></i>";
-
-    const text = document.createElement("span");
-    text.id = "thinkingText";
-    text.textContent = slow ? "Server oyanır, bir az gözlə…" : "";
-
-    row.append(dots, text);
-    body.appendChild(row);
-    wrap.appendChild(body);
-    return wrap;
-}
-
-function renderChat() {
-    thread.innerHTML = "";
-
-    const current = getCurrent();
-
-    if (!current || current.messages.length === 0) {
-        renderWelcome();
-        return;
-    }
-
-    current.messages.forEach(m => thread.appendChild(renderMessage(m)));
-
-    if (pending && currentId === 
+        actions.appendChil
